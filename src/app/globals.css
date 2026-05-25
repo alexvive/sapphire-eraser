@@ -1,0 +1,180 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-gold: #D4A843;
+  --color-gold-hover: #E8C66A;
+  --color-gold-pressed: #B8922F;
+  --color-sapphire-deep: #070F1E;
+  --color-sapphire-dark: #0A1628;
+  --color-sapphire: #0F2240;
+  --color-sapphire-light: #132B52;
+  --color-sapphire-lighter: #1A3358;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #0A1628;
+  --foreground: #E8E8F0;
+  --card: #0F2240;
+  --card-foreground: #E8E8F0;
+  --popover: #0F2240;
+  --popover-foreground: #E8E8F0;
+  --primary: #D4A843;
+  --primary-foreground: #0A1628;
+  --secondary: #132B52;
+  --secondary-foreground: #C0C8D8;
+  --muted: #1A3358;
+  --muted-foreground: #8090A8;
+  --accent: #D4A843;
+  --accent-foreground: #0A1628;
+  --destructive: #E05050;
+  --border: #1A3358;
+  --input: #1A3358;
+  --ring: #D4A843;
+  --chart-1: #D4A843;
+  --chart-2: #4A90D9;
+  --chart-3: #6BC5E8;
+  --chart-4: #C78E3A;
+  --chart-5: #2E5B8A;
+  --sidebar: #0F2240;
+  --sidebar-foreground: #E8E8F0;
+  --sidebar-primary: #D4A843;
+  --sidebar-primary-foreground: #0A1628;
+  --sidebar-accent: #132B52;
+  --sidebar-accent-foreground: #E8E8F0;
+  --sidebar-border: #1A3358;
+  --sidebar-ring: #D4A843;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Gold vignette overlay — decorative only, must never block interaction */
+.gold-vignette {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 50%,
+    rgba(212, 168, 67, 0.03) 70%,
+    rgba(212, 168, 67, 0.07) 85%,
+    rgba(212, 168, 67, 0.12) 95%,
+    rgba(212, 168, 67, 0.18) 100%
+  );
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A1628;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1A3358;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #254570;
+}
+
+/* Canvas cursor */
+.cursor-brush {
+  cursor: crosshair;
+}
+
+.cursor-eraser {
+  cursor: cell;
+}
+
+.cursor-pan {
+  cursor: grab;
+}
+
+.cursor-panning {
+  cursor: grabbing;
+}
+
+/* Smooth transitions */
+.transition-gold {
+  transition: all 0.2s ease;
+}
+
+/* Loading shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #0F2240 25%,
+    #1A3358 50%,
+    #0F2240 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Pulse gold */
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 168, 67, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(212, 168, 67, 0); }
+}
+
+.pulse-gold {
+  animation: pulse-gold 2s infinite;
+}
