@@ -5,7 +5,7 @@ import Canvas, { type CanvasHandle } from "@/components/eraser/Canvas";
 import Toolbar, { type Tool } from "@/components/eraser/Toolbar";
 import UploadZone from "@/components/eraser/UploadZone";
 import GoldVignette from "@/components/eraser/GoldVignette";
-import { inpaintDiffusion, compositeResult } from "@/lib/inpaint";
+import { patchMatchInpaint, compositeResult } from "@/lib/inpaint-patchmatch";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles } from "lucide-react";
 
@@ -326,8 +326,8 @@ async function clientSideInpaint(
         // Dilate mask by 2px to cover anti-aliased object edges
         const dilatedMaskData = dilateMaskData(maskRawData, width, height, 2);
 
-        // Run inpainting with the dilated mask
-        const result = inpaintDiffusion(
+        // Run PatchMatch inpainting with the dilated mask
+        const result = patchMatchInpaint(
           {
             width,
             height,
@@ -337,8 +337,7 @@ async function clientSideInpaint(
             width,
             height,
             data: dilatedMaskData,
-          },
-          150
+          }
         );
 
         // Composite: replace masked pixels with inpainted result
