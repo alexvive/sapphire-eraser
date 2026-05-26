@@ -10,6 +10,80 @@ import {
 } from "react";
 import type { Tool } from "./Toolbar";
 
+// ──────────────────────────────────────────────
+//  Ghost Brush — Golden Formula
+//  destination-out + globalAlpha 0.07 + soft radial gradient
+//  Makes objects semi-transparent ("ghost") with each stroke
+// ──────────────────────────────────────────────
+
+function drawGhostDot(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  pressure: number = 0
+) {
+  const prevAlpha = ctx.globalAlpha;
+  const prevComposite = ctx.globalCompositeOperation;
+
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.globalAlpha = 0.06 + pressure * 0.05; // "living ghost" with pressure
+
+  const gradient = ctx.createRadialGradient(x, y, 0, x, y, size / 2);
+  gradient.addColorStop(0, "rgba(0,0,0,1)");
+  gradient.addColorStop(0.5, "rgba(0,0,0,0.6)");
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = prevAlpha;
+  ctx.globalCompositeOperation = prevComposite;
+}
+
+function drawGhostLine(
+  ctx: CanvasRenderingContext2D,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  size: number,
+  pressure: number = 0
+) {
+  const prevAlpha = ctx.globalAlpha;
+  const prevComposite = ctx.globalCompositeOperation;
+
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.globalAlpha = 0.06 + pressure * 0.05;
+
+  // Draw a series of dots along the line for smooth ghost effect
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const steps = Math.max(1, Math.ceil(dist / (size * 0.15)));
+
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const px = from.x + dx * t;
+    const py = from.y + dy * t;
+
+    const gradient = ctx.createRadialGradient(px, py, 0, px, py, size / 2);
+    gradient.addColorStop(0, "rgba(0,0,0,1)");
+    gradient.addColorStop(0.5, "rgba(0,0,0,0.6)");
+    gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(px, py, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = prevAlpha;
+  ctx.globalCompositeOperation = prevComposite;
+}
+
+const GHOST_MASK_COLOR = "rgba(147, 112, 219, 0.35)"; // subtle violet indicator for ghost mask
+
 export interface CanvasHandle {
   getImageDataUrl: () => string;
   getMaskDataUrl: () => string;
@@ -201,19 +275,73 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(
       [externalZoom, pan]
     );
 
-    // Draw on mask
+    // Draw on mask (and optionally imageCanvas for ghost brush)
     const drawOnMask = useCallback(
       (pos: { x: number; y: number }, prevPos: { x: number; y: number } | null) => {
         const offscreen = offscreenMaskRef.current;
         const mskCanvas = maskCanvasRef.current;
-        if (!offscreen || !mskCanvas) return;
+        const imgCanvas = imageCanvasRef.current;
+        if (!offscreen || !mskCanvas || !imgCanvas) return;
 
         const oCtx = offscreen.getContext("2d")!;
         const mCtx = mskCanvas.getContext("2d")!;
+        const iCtx = imgCanvas.getContext("2d")!;
 
         const isErasing = tool === "eraser";
+        const isGhost = tool === "ghost";
         const size = brushSize;
 
+        // ═══ GHOST BRUSH: Golden Formula ═══
+        // Draws directly on imageCanvas with destination-out + low alpha
+        // + soft radial gradient → objects become semi-transparent ghosts
+        // Also marks the mask so Smart Erase knows the area
+        if (isGhost) {
+          // Ghost effect on imageCanvas
+          if (prevPos) {
+            drawGhostLine(iCtx, prevPos, pos, size);
+          } else {
+            drawGhostDot(iCtx, pos.x, pos.y, size);
+          }
+
+          // Mark mask for Smart Erase (violet tint to distinguish from brush mask)
+          oCtx.globalCompositeOperation = "source-over";
+          mCtx.globalCompositeOperation = "source-over";
+          oCtx.fillStyle = "rgba(255,255,255,0.8)";
+          oCtx.strokeStyle = "rgba(255,255,255,0.8)";
+          mCtx.fillStyle = GHOST_MASK_COLOR;
+          mCtx.strokeStyle = GHOST_MASK_COLOR;
+
+          if (prevPos) {
+            // Draw line on mask
+            oCtx.lineWidth = size;
+            oCtx.lineCap = "round";
+            oCtx.lineJoin = "round";
+            oCtx.beginPath();
+            oCtx.moveTo(prevPos.x, prevPos.y);
+            oCtx.lineTo(pos.x, pos.y);
+            oCtx.stroke();
+
+            mCtx.lineWidth = size;
+            mCtx.lineCap = "round";
+            mCtx.lineJoin = "round";
+            mCtx.beginPath();
+            mCtx.moveTo(prevPos.x, prevPos.y);
+            mCtx.lineTo(pos.x, pos.y);
+            mCtx.stroke();
+          } else {
+            oCtx.beginPath();
+            oCtx.arc(pos.x, pos.y, size / 2, 0, Math.PI * 2);
+            oCtx.fill();
+
+            mCtx.beginPath();
+            mCtx.arc(pos.x, pos.y, size / 2, 0, Math.PI * 2);
+            mCtx.fill();
+          }
+
+          return;
+        }
+
+        // ═══ NORMAL BRUSH / ERASER ═══
         if (isErasing) {
           oCtx.globalCompositeOperation = "destination-out";
           mCtx.globalCompositeOperation = "destination-out";
@@ -267,6 +395,10 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(
         }
 
         if (e.button === 0) {
+          // Save history BEFORE drawing (especially for ghost brush which modifies imageCanvas)
+          if (tool === "ghost") {
+            saveHistory();
+          }
           setIsDrawing(true);
           const pos = getCanvasPos(e);
           if (pos) {
@@ -275,7 +407,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(
           }
         }
       },
-      [spaceHeld, pan, getCanvasPos, drawOnMask]
+      [spaceHeld, pan, getCanvasPos, drawOnMask, tool, saveHistory]
     );
 
     const handleMouseMove = useCallback(
@@ -484,6 +616,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(
       ? isPanning
         ? "cursor-panning"
         : "cursor-pan"
+      : tool === "ghost"
+      ? "cursor-ghost"
       : tool === "brush"
       ? "cursor-brush"
       : "cursor-eraser";
