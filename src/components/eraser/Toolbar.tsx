@@ -24,7 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export type Tool = "brush" | "eraser" | "ghost";
+export type Tool = "brush" | "eraser";
 
 interface ToolbarProps {
   tool: Tool;
@@ -84,13 +84,6 @@ export default function Toolbar({
           label="Eraser (E)"
           active={tool === "eraser"}
           onClick={() => onToolChange("eraser")}
-        />
-        <ToolButton
-          icon={<GhostIcon className="w-4 h-4" />}
-          label="Ghost (G)"
-          active={tool === "ghost"}
-          onClick={() => onToolChange("ghost")}
-          ghostActive={tool === "ghost"}
         />
 
         <Separator className="bg-sapphire-lighter my-1 w-8" />
@@ -227,14 +220,12 @@ function ToolButton({
   active,
   disabled,
   onClick,
-  ghostActive,
 }: {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
   disabled?: boolean;
   onClick: () => void;
-  ghostActive?: boolean;
 }) {
   return (
     <Tooltip>
@@ -245,9 +236,7 @@ function ToolButton({
           className={`
             p-2 rounded-lg transition-all duration-150
             ${
-              ghostActive
-                ? "bg-purple-500/25 text-purple-300 shadow-inner shadow-purple-500/20"
-                : active
+              active
                 ? "bg-gold/20 text-gold shadow-inner"
                 : "text-muted-foreground hover:text-foreground hover:bg-sapphire-light/50"
             }
@@ -264,26 +253,6 @@ function ToolButton({
         {label}
       </TooltipContent>
     </Tooltip>
-  );
-}
-
-// Ghost icon — a friendly ghost silhouette
-function GhostIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 2C8.13 2 5 5.13 5 9v9l2-1 2 1 2-1 2 1 2-1 2 1V9c0-3.87-3.13-7-7-7z" />
-      <circle cx="9.5" cy="9" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="14.5" cy="9" r="1.2" fill="currentColor" stroke="none" />
-      <path d="M10 13.5c.8-.5 1.5-.5 2 0s1.2.5 2 0" strokeWidth="1.5" />
-    </svg>
   );
 }
 

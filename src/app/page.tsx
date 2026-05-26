@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import Canvas, { type CanvasHandle } from "@/components/eraser/Canvas";
 import Toolbar, { type Tool } from "@/components/eraser/Toolbar";
 import UploadZone from "@/components/eraser/UploadZone";
@@ -204,30 +204,6 @@ export default function Home() {
     setCanRedo(redo);
   }, []);
 
-  // Keyboard shortcuts for tool switching (B, E, G)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (!image) return; // Only switch tools when an image is loaded
-
-      if (e.code === "KeyB" && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setTool("brush");
-      }
-      if (e.code === "KeyE" && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setTool("eraser");
-      }
-      if (e.code === "KeyG" && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setTool("ghost");
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [image]);
-
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-sapphire-dark">
       <GoldVignette />
@@ -244,7 +220,7 @@ export default function Home() {
           </h1>
         </div>
         <p className="text-xs text-muted-foreground hidden sm:block">
-          Ghost (G) makes objects transparent — Smart Erase removes them completely
+          Paint over object, then click Erase
         </p>
       </header>
 
