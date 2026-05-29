@@ -1,6 +1,8 @@
 # SapphireEraser v3 ✨
 
-**Local tool for removing objects from images.**  
+**🔗 Live Demo:** [sapphire-eraser.netlify.app](https://sapphire-eraser.netlify.app)
+
+Local tool for removing objects from images.  
 Processing runs entirely on your device — accessed via browser.
 
 ## Purpose
